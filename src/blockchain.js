@@ -71,20 +71,30 @@ class Blockchain {
 
     _addBlock(block) {
         let self = this;
+        let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            block.hash = SHA256(JSON.stringify(block)).toString();
+            // Note: Remember not to calculate the HASH until after all elements are in
             block.height = self.height + 1;
             block.time = new Date().getTime().toString().slice(0, -3);
             if (self.chain.length > 0) {
                 block.previousBlockHash = self.chain[self.height].hash;
             }
+            block.hash = SHA256(JSON.stringify(block)).toString();
             // Add new block
-            self.chain.push(block);
-            self.height += 1;
-            if (self.chain[self.height] == block) {
-                resolve(block);
+            // Validate each block
+            let validation = await block.validate();
+            if (!validation) {
+                console.log("Block validation error");
+                errorLog.push("Block validation error");
+                reject(errorLog);
             } else {
-                reject(Error("Error adding block"));
+                self.chain.push(block);
+                self.height += 1;
+                if (self.chain[self.height] == block) {
+                    resolve(block);
+                } else {
+                    reject(Error("Error adding block"));
+                }
             }
         });
     }
@@ -100,7 +110,7 @@ class Blockchain {
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
             const timestamp = Time.now();
-            const message = '${address}:${time}:starRegistry';
+            const message = '${address}:${timestamp}:starRegistry';
             resolve(message);
         });
     }
@@ -130,7 +140,7 @@ class Blockchain {
             if (currentTime - timeMessage < 60 * 5) {
                 let isVerified = bitcoinMessage.verify(message, address, signature);
                 if (isVerified) {
-                    const block = new Block({
+                    const block = new BlockClass.Block({
                         address,
                         message,
                         signature,
@@ -159,7 +169,7 @@ class Blockchain {
             if (block) {
                 resolve(block);
             } else {
-                resolve(null);
+                reject(null);
             }
         });
     }
@@ -176,7 +186,7 @@ class Blockchain {
             if(block){
                 resolve(block);
             } else {
-                resolve(null);
+                reject(null);
             }
         });
     }
