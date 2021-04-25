@@ -91,11 +91,13 @@ class Blockchain {
                 console.log("Block Validated");
                 self.chain.push(block);
                 self.height += 1;
-                if (self.chain[self.height] == block) {
-                    resolve(block);
-                } else {
-                    reject(Error("Error adding block"));
-                }
+                resolve(block);
+                reject(Error("Error adding block"));
+                //if (self.chain[self.height] == block) {
+                //    resolve(block);
+                //} else {
+                //    reject(Error("Error adding block"));
+               // }
             }
         });
     }
