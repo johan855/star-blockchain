@@ -140,13 +140,8 @@ class Blockchain {
             if (currentTime - timeMessage < 60 * 5) {
                 let isVerified = bitcoinMessage.verify(message, address, signature);
                 if (isVerified) {
-                    const block = new BlockClass.Block({
-                        address,
-                        message,
-                        signature,
-                        star
-                    });
-                    self._addBlock(block).then(block => resolve(block)).catch(error => reject(error));
+                    const block = new BlockClass.Block({"owner": address, "star": star});
+                    resolve(self._addBlock(block));
                 } else {
                     reject('Signature is not valid');
                 }
