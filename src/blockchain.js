@@ -138,18 +138,24 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise((resolve, reject) => {
-            let timeMessage = parseInt(message.split(':')[1]);
-            let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
-            if (currentTime - timeMessage < 60 * 5) {
-                let isVerified = bitcoinMessage.verify(message, address, signature);
-                if (isVerified) {
-                    const block = new BlockClass.Block({"owner": address, "star": star});
-                    resolve(self._addBlock(block));
+            let errorLogBLocks = self.chain.validateChain();
+            if (errorLogBLocks == []) {
+                let timeMessage = parseInt(message.split(':')[1]);
+                let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
+                if (currentTime - timeMessage < 60 * 5) {
+                    let isVerified = bitcoinMessage.verify(message, address, signature);
+                    if (isVerified) {
+                        const block = new BlockClass.Block({ "owner": address, "star": star });
+                        resolve(self._addBlock(block));
+                    } else {
+                        reject("Signature is not valid");
+                    }
                 } else {
-                    reject('Signature is not valid');
+                    reject("Validation time exceeeds the limit of 5 minutes");
                 }
             } else {
-                reject('Validation time exceeeds the limit of 5 minutes');
+                console.log("Chain invalid");
+                reject("Validation unsuccesful");
             }
         });
     }
@@ -198,18 +204,27 @@ class Blockchain {
     getStarsByWalletAddress (address) {
         let self = this;
         let stars = [];
-        return new Promise((resolve, reject) => {
-            let filteredBlocks = self.chain.filter(block => block.address === address);
-            if (filteredBlocks.length === 0) {
-                reject(new Error('Address not found.'));
-            } else {
-                stars = filteredBlocks.map(block => JSON.parse(hex2ascii(block.body)));
-                if (stars) {
-                    resolve(stars);
-                } else {
-                    reject(new Error('Could not return stars'));
+        return new Promise((resolve, _) => {
+            self.chain.forEach(async (block) => {
+                let BData = await block.getBData();
+                if (BData.address === address) {
+                    stars.push(BData);
                 }
-            }
+            });
+            resolve(stars);
+            //TO DO: Why is the filter not working
+            //let filteredBlocks = self.chain.filter(block => block.owner === address);
+            //console.log(filteredBlocks);
+            //if (filteredBlocks.length === 0) {
+            //    reject(new Error('Address not found.'));
+            //} else {
+            //    stars = filteredBlocks.map(block => JSON.parse(hex2ascii(block.body)));
+            //    if (stars) {
+            //        resolve(stars);
+            //    } else {
+            //        reject(new Error('Could not return stars'));
+            //    }
+            //}
         });
     }
 
@@ -221,31 +236,16 @@ class Blockchain {
      */
     validateChain() {
         let self = this;
-        let errorLog = [];
+        let errorLogBLocks = [];
         return new Promise(async (resolve, reject) => {
-            if (self.height > 0) {
-                for (var i = 1; i <= self.height; i++) {
-                    let block = self.chain[i];
-                    let validation = await block.validate();
-                    if (!validation) {
-                        console.log("Validation error");
-                        errorLog.push("Validation error")
-                    } else if (block.previousBlockHash != self.chain[i - 1].hash) {
-                        console.log("Previous block hash error");
-                        errorLog.push("Previous block hash error")
-                    }
-                } 
-                if (!errorLog) {
-                    resolve("Valid chain");
-                } else {
-                    resolve(errorLog);
+            self.chain.forEach(block => {
+                if (!block.validate()) {
+                    errorLogBLocks.push(block);
+                    console.log("Invalid block")
                 }
-            } else {
-                reject(Error("Error validating chain")).catch(error => {
-                    console.log('Error', error.message);
-                });
-            }
-        })
+            });
+            resolve(errorLogBLocks)
+        });
     }
 
 }
