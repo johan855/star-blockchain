@@ -110,7 +110,7 @@ class Blockchain {
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
             const timestamp = new Date().getTime().toString().slice(0, -3)
-            const message = '${address}:${timestamp}:starRegistry';
+            const message = address + ':' + timestamp + ':starRegistry';
             resolve(message);
         });
     }
