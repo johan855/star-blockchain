@@ -42,7 +42,7 @@ class Block {
             const validateHash = self.hash;
             self.hash = null;
             // Recalculate the hash of the Block
-            const recalculatedHash = SHA256(JSON.stringify({ hash: null, height: self.height, body: self.body, time: self.time, previousBlockHash: self.previousBlockHash })).toString();
+            const recalculatedHash = SHA256(JSON.stringify(this)).toString();
             self.hash = validateHash;
             // Comparing if the hashes changed
             // Returning the Block is not 

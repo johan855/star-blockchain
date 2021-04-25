@@ -74,10 +74,10 @@ class Blockchain {
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
             // Note: Remember not to calculate the HASH until after all elements are in
-            block.height = self.height + 1;
+            block.height = self.chain.length;
             block.time = new Date().getTime().toString().slice(0, -3);
             if (self.chain.length > 0) {
-                block.previousBlockHash = self.chain[self.height].hash;
+                block.previousBlockHash = self.chain[self.chain.length - 1];
             }
             block.hash = SHA256(JSON.stringify(block)).toString();
             // Add new block
