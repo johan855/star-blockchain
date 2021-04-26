@@ -47,7 +47,7 @@ class BlockchainController {
                 if(message){
                     return res.status(200).json(message);
                 } else {
-                    return res.status(500).send("An error happened!");
+                    return res.status(500).send("An error happened in requestOwnership!");
                 }
             } else {
                 return res.status(500).send("Check the Body Parameter!");
@@ -68,7 +68,7 @@ class BlockchainController {
                     if(block){
                         return res.status(200).json(block);
                     } else {
-                        return res.status(500).send("An error happened!");
+                        return res.status(500).send("An error happened in submitStar!");
                     }
                 } catch (error) {
                     return res.status(500).send(error);
@@ -110,7 +110,7 @@ class BlockchainController {
                         return res.status(404).send("Block Not Found!");
                     }
                 } catch (error) {
-                    return res.status(500).send("An error happened!");
+                    return res.status(500).send("An error happened in getStarsByOwner!");
                 }
             } else {
                 return res.status(500).send("Block Not Found! Review the Parameters!");
@@ -122,13 +122,11 @@ class BlockchainController {
     // Enpoint to validateChain 
     getValidateChain() {
         this.app.get("/blockchain", async (req, res) => {
-            if (req.params.height) {
-                let validation = await this.blockchain.validateChain();
-                if (!validation) {
-                    return res.status(404).json(block);
-                } else {
-                    return res.status(200).send("Chain validated");
-                }
+            let errorLogBLocks = await this.blockchain.validateChain();
+            if (errorLogBLocks != []) {
+                return res.status(404).json(errorLogBLocks);
+            } else {
+                return res.status(200).send("Chain validated");
             }
         });
     }

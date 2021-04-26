@@ -138,8 +138,7 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise((resolve, reject) => {
-            let errorLogBLocks = self.chain.validateChain();
-            if (errorLogBLocks == []) {
+            if (self.validateChain()) {
                 let timeMessage = parseInt(message.split(':')[1]);
                 let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
                 if (currentTime - timeMessage < 60 * 5) {
@@ -204,11 +203,14 @@ class Blockchain {
     getStarsByWalletAddress (address) {
         let self = this;
         let stars = [];
-        return new Promise((resolve, _) => {
-            self.chain.forEach(async (block) => {
-                let BData = await block.getBData();
-                if (BData.address === address) {
-                    stars.push(BData);
+        return new Promise((resolve, reject) => {
+            console.log("Entering promise on getStarsByWalletAddress")
+            self.chain.forEach((block) => {
+                let BData = block.getBData();
+                if (BData) {
+                    if (BData.owner === address) {
+                        stars.push(BData);
+                    }
                 }
             });
             resolve(stars);
@@ -237,14 +239,14 @@ class Blockchain {
     validateChain() {
         let self = this;
         let errorLogBLocks = [];
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve, _) => {
             self.chain.forEach(block => {
                 if (!block.validate()) {
                     errorLogBLocks.push(block);
                     console.log("Invalid block")
                 }
             });
-            resolve(errorLogBLocks)
+            resolve(errorLogBLocks == [])
         });
     }
 
